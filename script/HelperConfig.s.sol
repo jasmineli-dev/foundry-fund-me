@@ -4,25 +4,50 @@ import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {MockV3Aggregator} from "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
-contract HelperConfig is Script {
+abstract contract CodeConstants {
     uint8 public constant DECIMAL = 8;
     int256 public constant INITIAL_ANSWER = 2000e8;
 
-    NetworkConfig public activeNetworkConfig;
+    /*//////////////////////////////////////////////////////////////
+                                CHAIN ID
+    //////////////////////////////////////////////////////////////*/
+
+    uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
+    uint256 public constant ZKSYNC_SEPOLIA_CHAIN_ID = 300;
+    uint256 public constant LOCAL_CHAIN_ID = 31337;
+}
+
+contract HelperConfig is Script, CodeConstants {
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
+    error HelperConfig__InvalidChainId();
+    /*//////////////////////////////////////////////////////////////
+                                 TYPES
+    //////////////////////////////////////////////////////////////*/
 
     struct NetworkConfig {
         address priceFeed; //ETH/USD price feed
         uint256 version;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            STATE VARIABLES
+    //////////////////////////////////////////////////////////////*/
+
+    NetworkConfig public activeNetworkConfig;
+    mapping(uint256 chainId => NetworkConfig) public networkConfigs;
+
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     constructor() {
-        if (block.chainid == 11155111) {
-            activeNetworkConfig = getSepoliaNetworkConfig();
-        } else if (block.chainid == 1) {
-            activeNetworkConfig = getMainnetNetworkConfig();
-        } else {
-            activeNetworkConfig = getOrCreateAnvilNetworkConfig();
-        }
+        networkConfigs[ETH_SEPOLIA_CHAIN_ID] = getSepoliaNetworkConfig();
+        networkConfigs[
+            ZKSYNC_SEPOLIA_CHAIN_ID
+        ] = getZkSyncSepoliaNetworkConfig();
+        //note: We skip doing the local config
+        //activeNetworkConfig[LOCAL_CHAIN_ID] = getOrCreateAnvilNetworkConfig();
     }
 
     //A struct is a reference type, not a value type.
@@ -31,6 +56,9 @@ contract HelperConfig is Script {
     // Exists only during function execution
     // Therefore, it must live in memory.
 
+    /*//////////////////////////////////////////////////////////////
+                               FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     function getSepoliaNetworkConfig()
         public
         pure
@@ -39,6 +67,18 @@ contract HelperConfig is Script {
         return
             NetworkConfig({
                 priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
+                version: 4
+            });
+    }
+
+    function getZkSyncSepoliaNetworkConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                priceFeed: 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF,
                 version: 4
             });
     }
@@ -55,6 +95,21 @@ contract HelperConfig is Script {
             });
     }
 
+    function getConfigByChainId(
+        uint256 chainId
+    ) public returns (NetworkConfig memory) {
+        if (networkConfigs[chainId].priceFeed != address(0)) {
+            return networkConfigs[chainId];
+        } else if (chainId == LOCAL_CHAIN_ID) {
+            return getOrCreateAnvilNetworkConfig();
+        } else {
+            revert HelperConfig__InvalidChainId();
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                              LOCAL CHAIN
+    //////////////////////////////////////////////////////////////*/
     function getOrCreateAnvilNetworkConfig()
         public
         returns (NetworkConfig memory)

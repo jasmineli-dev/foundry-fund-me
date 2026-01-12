@@ -29,7 +29,11 @@ contract FundMe {
             msg.value.getConversionRate(sPriceFeed) >= MINIMUM_USD, // function getConversionRate(uint256 ethAmount,AggregatorV3Interface pricefeed)
             "You need to spend more ETH!"
         );
-        // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
+        // require(
+        //     PriceConverter.getConversionRate(msg.value, sPriceFeed) >=
+        //         MINIMUM_USD,
+        //     "You need to spend more ETH!"
+        // );
         addressToAmountFunded[msg.sender] += msg.value;
         funders.push(msg.sender);
     }
@@ -42,9 +46,12 @@ contract FundMe {
     }
 
     modifier onlyOwner() {
-        // require(msg.sender == owner);
-        if (msg.sender != MY_OWNER) revert FundMe_NotOwner();
+        _onlyOwner();
         _;
+    }
+
+    function _onlyOwner() internal {
+        if (msg.sender != MY_OWNER) revert FundMe_NotOwner(); //gas efficient
     }
 
     function withdraw() public onlyOwner {
@@ -80,6 +87,7 @@ contract FundMe {
     //  /        \
     //receive()  fallback()
 
+    //Any ETH sent to the contract triggers fund().
     fallback() external payable {
         fund();
     }

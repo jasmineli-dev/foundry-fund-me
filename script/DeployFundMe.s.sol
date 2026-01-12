@@ -11,17 +11,23 @@ contract DeployFundMe is Script {
 
     uint256 public version;
 
-    function run() public returns (FundMe) {
+    function run() public returns (FundMe, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
 
         //Get Active Network Config and ETH/USD Price feed address
-        (address priceFeedAddress, uint256 currentVersion) = helperConfig
-            .activeNetworkConfig();
+        address priceFeedAddress = helperConfig
+            .getConfigByChainId(block.chainid)
+            .priceFeed;
+        uint256 currentVersion = helperConfig
+            .getConfigByChainId(block.chainid)
+            .version;
+        // (address priceFeedAddress, uint256 currentVersion) = helperConfig
+        //     .getConfigByChainId(block.chainid);
         // address priceFeedAddress = helperConfig.activeNetworkConfig().priceFeed; ok too
         version = currentVersion;
         vm.startBroadcast();
         FundMe fundMe = new FundMe(priceFeedAddress);
         vm.stopBroadcast();
-        return fundMe;
+        return (fundMe, helperConfig);
     }
 }
