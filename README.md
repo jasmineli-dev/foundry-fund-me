@@ -4,7 +4,7 @@
 >2. All unit tests have been executed and pass on:
    - Local Anvil chain
    - Sepolia testnet
-   - ZkSync (run `foundryup-zksyc`,then `forge test --zksync`)
+   - ZkSync testnet (run `foundryup-zksync`,then `forge test --zksync`)
 >3. This project includes examples and experiments related to Ethereum storage layout (e.g., storage slots for uint256, bool, arrays, and mappings).
 
 
