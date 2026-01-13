@@ -8,7 +8,7 @@ import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {HelperConfig, CodeConstants} from "../../script/HelperConfig.s.sol";
-import {HelperConfig, CodeConstants} from "../../script/HelperConfig.s.sol";
+import {MockV3Aggregator} from "../mock/MockV3Aggregator.sol";
 
 contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
     FundMe public fundMe;
@@ -21,12 +21,24 @@ contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
     uint256 constant GAS_PRICE = 1;
 
     function setUp() external {
-        if (isZkSyncChain() || block.chainid == 300) {
-            //block.chainid == 324 || block.chainid == 280 ||block.chainid == 300
-            vm.skip(true);
-        } else {
+        // if (isZkSyncChain() || block.chainid == 300) {
+        //     //block.chainid == 324 || block.chainid == 280 ||block.chainid == 300
+        //     vm.skip(true);
+        // } else {
+        //     deployer = new DeployFundMe();
+        //     (fundMe, helperConfig) = deployer.run();
+        // }
+        // vm.deal(USER, STARTING_BALANCE);
+
+        if (!isZkSyncChain()) {
             deployer = new DeployFundMe();
             (fundMe, helperConfig) = deployer.run();
+        } else {
+            MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
+                DECIMAL,
+                INITIAL_ANSWER
+            );
+            fundMe = new FundMe(address(mockPriceFeed));
         }
         vm.deal(USER, STARTING_BALANCE);
 

@@ -4,11 +4,8 @@
 >2. All unit tests have been executed and pass on:
    - Local Anvil chain
    - Sepolia testnet
->3. zkSync testing notes:
-   - The project currently uses an older version of the Chainlink mock contract (`MockV3Aggregator`).
-   - Some unit and integration tests are skipped when running `forge test --zksync` due to mock compatibility issues.
-   - Support will be updated to use newer mock contracts.
->4. This project includes examples and experiments related to Ethereum storage layout (e.g., storage slots for variables, arrays, and mappings).
+   - ZkSync (run `foundryup-zksyc`,then `forge test --zksync`)
+>3. This project includes examples and experiments related to Ethereum storage layout (e.g., storage slots for uint256, bool, arrays, and mappings).
 
 
 ## Foundry
